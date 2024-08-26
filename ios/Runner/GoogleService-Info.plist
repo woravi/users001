@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>API_KEY</key>
+	<string>AIzaSyDbUiAjzQ_O8c8i5Ub-RpnfqWno6evidqQ</string>
+	<key>GCM_SENDER_ID</key>
+	<string>508785285053</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>rw1968.com.users001</string>
+	<key>PROJECT_ID</key>
+	<string>toatrider</string>
+	<key>STORAGE_BUCKET</key>
+	<string>toatrider.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:508785285053:ios:c3b7c0fd3a7bf43e61e4d4</string>
+	<key>DATABASE_URL</key>
+	<string>https://toatrider-default-rtdb.asia-southeast1.firebasedatabase.app</string>
+</dict>
+</plist>

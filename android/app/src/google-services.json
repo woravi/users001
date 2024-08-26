@@ -1,0 +1,62 @@
+{
+  "project_info": {
+    "project_number": "508785285053",
+    "firebase_url": "https://toatrider-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "toatrider",
+    "storage_bucket": "toatrider.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:508785285053:android:ebffbdef8e85b1fb61e4d4",
+        "android_client_info": {
+          "package_name": "com.example.ridertoat"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBBPMMTXkHGyNd1HA2jw1mYMyYxP8hcLOA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:508785285053:android:3bd59ae349a3fd1a61e4d4",
+        "android_client_info": {
+          "package_name": "rw1968.com.users001"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBBPMMTXkHGyNd1HA2jw1mYMyYxP8hcLOA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      },
+      "android": {
+        "package": "rw1968.com.users001",
+        "versionCode": 1.0,
+        "permissions": [
+          "ACCESS_COARSE_LOCATION",
+          "CAMERA"
+        ],
+        "config": {
+          "googleMaps": {
+            "apiKey": "AIzaSyBBPMMTXkHGyNd1HA2jw1mYMyYxP8hcLOA"
+          }
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
