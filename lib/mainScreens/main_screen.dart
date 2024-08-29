@@ -1,25 +1,25 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_polyline_points/flutter_polyline_points.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:provider/provider.dart';
 import 'package:users001/assistants/assistant_methods.dart';
-import 'package:users001/authentication/login_screen.dart';
 import 'package:users001/global/global.dart';
+import 'package:users001/infoHandler/app_info.dart';
+import 'package:users001/mainScreens/search_places_screen.dart';
 import 'package:users001/widgets/my_drawer.dart';
 
+import '../widgets/progress_dialog.dart';
 
-
-class MainScreen extends StatefulWidget
-{
+class MainScreen extends StatefulWidget {
   @override
   _MainScreenState createState() => _MainScreenState();
 }
 
-
-
-
-class _MainScreenState extends State<MainScreen>
-{
+class _MainScreenState extends State<MainScreen> {
   final Completer<GoogleMapController> _controllerGoogleMap = Completer();
   GoogleMapController? newGoogleMapController;
 
@@ -33,11 +33,19 @@ class _MainScreenState extends State<MainScreen>
 
   Position? userCurrentPosition;
   var geoLocator = Geolocator();
+
   LocationPermission? _locationPermission;
   double bottomPaddingOfMap = 0;
 
-  blackThemeGoogleMap()
-  {
+  List<LatLng> pLineCoOrdinatesList = [];
+  Set<Polyline> polyLineSet = {};
+
+  Set<Marker> markersSet = {};
+  Set<Circle> circlesSet = {};
+
+
+
+  blackThemeGoogleMap() {
     newGoogleMapController!.setMapStyle('''
                     [
                       {
@@ -203,29 +211,33 @@ class _MainScreenState extends State<MainScreen>
                 ''');
   }
 
-  checkIfLocationPermissionAllowed() async
-  {
+  checkIfLocationPermissionAllowed() async {
     _locationPermission = await Geolocator.requestPermission();
 
-    if(_locationPermission == LocationPermission.denied)
-    {
+    if (_locationPermission == LocationPermission.denied) {
       _locationPermission = await Geolocator.requestPermission();
     }
   }
 
-  locateUserPosition() async
-  {
-    Position cPosition = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+  locateUserPosition() async {
+    Position cPosition = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high);
     userCurrentPosition = cPosition;
 
-    LatLng latLngPosition = LatLng(userCurrentPosition!.latitude, userCurrentPosition!.longitude);
+    LatLng latLngPosition =
+        LatLng(userCurrentPosition!.latitude, userCurrentPosition!.longitude);
 
-    CameraPosition cameraPosition = CameraPosition(target: latLngPosition, zoom: 14);
+    CameraPosition cameraPosition =
+        CameraPosition(target: latLngPosition, zoom: 14);
 
-    newGoogleMapController!.animateCamera(CameraUpdate.newCameraPosition(cameraPosition));
+    newGoogleMapController!
+        .animateCamera(CameraUpdate.newCameraPosition(cameraPosition));
+
+    String humanReadableAddress =
+        await AssistantMethods.searchAddressForGeographicCoOrdinates(
+            userCurrentPosition!, context);
+    print("this is your address = " + humanReadableAddress);
   }
-
-
 
   @override
   void initState() {
@@ -235,8 +247,7 @@ class _MainScreenState extends State<MainScreen>
   }
 
   @override
-  Widget build(BuildContext context)
-  {
+  Widget build(BuildContext context) {
     return Scaffold(
       key: sKey,
       drawer: Container(
@@ -253,7 +264,6 @@ class _MainScreenState extends State<MainScreen>
       ),
       body: Stack(
         children: [
-
           GoogleMap(
             padding: EdgeInsets.only(bottom: bottomPaddingOfMap),
             mapType: MapType.normal,
@@ -261,8 +271,10 @@ class _MainScreenState extends State<MainScreen>
             zoomGesturesEnabled: true,
             zoomControlsEnabled: true,
             initialCameraPosition: _kGooglePlex,
-            onMapCreated: (GoogleMapController controller)
-            {
+            polylines: polyLineSet,
+            markers: markersSet,
+            circles: circlesSet,
+            onMapCreated: (GoogleMapController controller) {
               _controllerGoogleMap.complete(controller);
               newGoogleMapController = controller;
 
@@ -272,6 +284,7 @@ class _MainScreenState extends State<MainScreen>
               setState(() {
                 bottomPaddingOfMap = 240;
               });
+
               locateUserPosition();
             },
           ),
@@ -281,8 +294,7 @@ class _MainScreenState extends State<MainScreen>
             top: 30,
             left: 14,
             child: GestureDetector(
-              onTap: ()
-              {
+              onTap: () {
                 sKey.currentState!.openDrawer();
               },
               child: const CircleAvatar(
@@ -306,31 +318,47 @@ class _MainScreenState extends State<MainScreen>
               child: Container(
                 height: searchLocationContainerHeight,
                 decoration: const BoxDecoration(
-                  color: Colors.black,
+                  color: Colors.black87,
                   borderRadius: BorderRadius.only(
                     topRight: Radius.circular(20),
                     topLeft: Radius.circular(20),
                   ),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
                   child: Column(
                     children: [
                       //from
-                      const Row(
+                      Row(
                         children: [
-                          Icon(Icons.add_location_alt_outlined, color: Colors.grey,),
-                          SizedBox(width: 12.0,),
+                          const Icon(
+                            Icons.add_location_alt_outlined,
+                            color: Colors.grey,
+                          ),
+                          const SizedBox(
+                            width: 12.0,
+                          ),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                "เดินทางจาก",
-                                style: TextStyle(color: Colors.grey, fontSize: 12),
+                              const Text(
+                                "From",
+                                style:
+                                    TextStyle(color: Colors.grey, fontSize: 12),
                               ),
                               Text(
-                                "ตำแหน่งปัจจุบันของคุณ",
-                                style: TextStyle(color: Colors.grey, fontSize: 14),
+                                Provider.of<AppInfo>(context)
+                                            .userPickUpLocation !=
+                                        null
+                                    ? (Provider.of<AppInfo>(context)
+                                                .userPickUpLocation!
+                                                .locationName!)
+                                            .substring(0, 24) +
+                                        "..."
+                                    : "not getting address",
+                                style: const TextStyle(
+                                    color: Colors.grey, fontSize: 14),
                               ),
                             ],
                           ),
@@ -348,24 +376,51 @@ class _MainScreenState extends State<MainScreen>
                       const SizedBox(height: 16.0),
 
                       //to
-                      const Row(
-                        children: [
-                          Icon(Icons.add_location_alt_outlined, color: Colors.grey,),
-                          SizedBox(width: 12.0,),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "เดินทางถึง",
-                                style: TextStyle(color: Colors.grey, fontSize: 12),
-                              ),
-                              Text(
-                                "ต้องการจะไปไหน?",
-                                style: TextStyle(color: Colors.grey, fontSize: 14),
-                              ),
-                            ],
-                          ),
-                        ],
+                      GestureDetector(
+                        onTap: () async {
+                          //go to search places screen
+                          var responseFromSearchScreen = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (c) => SearchPlacesScreen()));
+
+                          if (responseFromSearchScreen == "obtainedDropoff") {
+                            //draw routes - draw polyline
+                            await drawPolyLineFromOriginToDestination();
+                          }
+                        },
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.add_location_alt_outlined,
+                              color: Colors.grey,
+                            ),
+                            const SizedBox(
+                              width: 12.0,
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  "To",
+                                  style: TextStyle(
+                                      color: Colors.grey, fontSize: 12),
+                                ),
+                                Text(
+                                  Provider.of<AppInfo>(context)
+                                              .userDropOffLocation !=
+                                          null
+                                      ? Provider.of<AppInfo>(context)
+                                          .userDropOffLocation!
+                                          .locationName!
+                                      : "Where to go?",
+                                  style: const TextStyle(
+                                      color: Colors.grey, fontSize: 14),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
 
                       const SizedBox(height: 10.0),
@@ -380,27 +435,146 @@ class _MainScreenState extends State<MainScreen>
 
                       ElevatedButton(
                         child: const Text(
-                          "ขอใช้บริการรถ",
+                          "Request a Ride",
                         ),
-                        onPressed: ()
-                        {
-
-                        },
+                        onPressed: () {},
                         style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.green,
-                            textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)
-                        ),
+                            textStyle: const TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.bold)),
                       ),
-
                     ],
                   ),
                 ),
               ),
             ),
           ),
-
         ],
       ),
     );
+  }
+
+  Future<void> drawPolyLineFromOriginToDestination() async {
+    var originPosition =
+        Provider.of<AppInfo>(context, listen: false).userPickUpLocation;
+    var destinationPosition =
+        Provider.of<AppInfo>(context, listen: false).userDropOffLocation;
+
+    var originLatLng = LatLng(
+        originPosition!.locationLatitude!, originPosition.locationLongitude!);
+    var destinationLatLng = LatLng(destinationPosition!.locationLatitude!,
+        destinationPosition.locationLongitude!);
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) => ProgressDialog(
+        message: "Please wait...",
+      ),
+    );
+
+    var directionDetailsInfo =
+        await AssistantMethods.obtainOriginToDestinationDirectionDetails(
+            originLatLng, destinationLatLng);
+
+    Navigator.pop(context);
+
+    print("These are points = ");
+    print(directionDetailsInfo!.e_points);
+
+    PolylinePoints pPoints = PolylinePoints();
+    List<PointLatLng> decodedPolyLinePointsResultList =
+        pPoints.decodePolyline(directionDetailsInfo!.e_points!);
+
+    pLineCoOrdinatesList.clear();
+
+    if (decodedPolyLinePointsResultList.isNotEmpty) {
+      decodedPolyLinePointsResultList.forEach((PointLatLng pointLatLng) {
+        pLineCoOrdinatesList.add(LatLng(pointLatLng.latitude, pointLatLng.longitude));
+      });
+    }
+
+    polyLineSet.clear();
+
+    setState(() {
+      Polyline polyline = Polyline(
+        color: Colors.purpleAccent,
+        polylineId: const PolylineId("PolylineID"),
+        jointType: JointType.round,
+        points: pLineCoOrdinatesList,
+        startCap: Cap.roundCap,
+        endCap: Cap.roundCap,
+        geodesic: true,
+      );
+
+      polyLineSet.add(polyline);
+    });
+
+    LatLngBounds boundsLatLng;
+    if(originLatLng.latitude > destinationLatLng.latitude && originLatLng.longitude > destinationLatLng.longitude)
+    {
+      boundsLatLng = LatLngBounds(southwest: destinationLatLng, northeast: originLatLng);
+    }
+    else if(originLatLng.longitude > destinationLatLng.longitude)
+    {
+      boundsLatLng = LatLngBounds(
+        southwest: LatLng(originLatLng.latitude, destinationLatLng.longitude),
+        northeast: LatLng(destinationLatLng.latitude, originLatLng.longitude),
+      );
+    }
+    else if(originLatLng.latitude > destinationLatLng.latitude)
+    {
+      boundsLatLng = LatLngBounds(
+        southwest: LatLng(destinationLatLng.latitude, originLatLng.longitude),
+        northeast: LatLng(originLatLng.latitude, destinationLatLng.longitude),
+      );
+    }
+    else
+    {
+      boundsLatLng = LatLngBounds(southwest: originLatLng, northeast: destinationLatLng);
+    }
+
+    newGoogleMapController!.animateCamera(CameraUpdate.newLatLngBounds(boundsLatLng, 65));
+
+    Marker originMarker = Marker(
+      markerId: const MarkerId("originID"),
+      infoWindow: InfoWindow(title: originPosition.locationName, snippet: "Origin"),
+      position: originLatLng,
+      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueYellow),
+    );
+
+    Marker destinationMarker = Marker(
+      markerId: const MarkerId("destinationID"),
+      infoWindow: InfoWindow(title: destinationPosition.locationName, snippet: "Destination"),
+      position: destinationLatLng,
+      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
+    );
+
+    setState(() {
+      markersSet.add(originMarker);
+      markersSet.add(destinationMarker);
+    });
+
+    Circle originCircle = Circle(
+      circleId: const CircleId("originID"),
+      fillColor: Colors.green,
+      radius: 12,
+      strokeWidth: 3,
+      strokeColor: Colors.white,
+      center: originLatLng,
+    );
+
+    Circle destinationCircle = Circle(
+      circleId: const CircleId("destinationID"),
+      fillColor: Colors.red,
+      radius: 12,
+      strokeWidth: 3,
+      strokeColor: Colors.white,
+      center: destinationLatLng,
+    );
+
+    setState(() {
+      circlesSet.add(originCircle);
+      circlesSet.add(destinationCircle);
+    });
   }
 }
